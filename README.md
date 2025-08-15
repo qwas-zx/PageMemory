@@ -32,7 +32,7 @@ PageMemory 是一个用户脚本（UserScript），帮助您记录在网页中�
    - [Greasemonkey](https://www.greasespot.net/)
 
 2. 安装脚本：
-   - [点击此处安装最新版](您的安装链接)
+   - [点击此处安装最新版](https://greasyfork.org/zh-CN/scripts/545892-pagememory)
    - 或手动添加脚本到管理器
 
 ## 使用指南
