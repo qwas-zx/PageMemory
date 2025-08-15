@@ -8,8 +8,8 @@
 // @match        about:srcdoc
 // @match        file:///*
 // @license      MIT
-// @updateURL    
-// @downloadURL  
+// @updateURL    https://github.com/qwas-zx/PageMemory/blob/master/Scroll%20Historian.user.js
+// @downloadURL  https://github.com/qwas-zx/PageMemory/blob/master/Scroll%20Historian.user.js
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_addStyle
