@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         PageMemory
 // @namespace    scroll-historian.js
-// @version      2.1
-// @description  带历史记录管理的位置记忆器
+// @version      2.2
+// @description  带历史记录管理的位置记忆器（支持拖拽）
 // @author       QWAS-zx
 // @match        *://*/*
 // @match        about:srcdoc
@@ -20,8 +20,12 @@
     'use strict';
     
     const STORAGE_KEY = 'Global_Position_History';
+    const HELPER_POSITION_KEY = 'Global_Helper_Position';
     let menuVisible = false;
     let historyVisible = false;
+    let isDragging = false;
+    let dragStartX, dragStartY;
+    let initialX, initialY;
 
     // 添加全局样式
     GM_addStyle(`
@@ -31,6 +35,13 @@
             bottom: 25px;
             right: 25px;
             z-index: 10000;
+            cursor: grab;
+        }
+        
+        #mdn-position-helper.dragging {
+            cursor: grabbing;
+            opacity: 0.9;
+            box-shadow: 0 0 15px rgba(38, 139, 210, 0.8);
         }
         
         #mdn-main-btn {
@@ -47,6 +58,7 @@
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(0,0,0,0.25);
             transition: all 0.3s;
+            user-select: none;
         }
         
         #mdn-main-btn:hover {
@@ -460,6 +472,27 @@
         }
     }
 
+    // 加载保存的位置
+    function loadSavedPosition() {
+        const savedPos = GM_getValue(HELPER_POSITION_KEY, null);
+        if (savedPos) {
+            helperContainer.style.left = savedPos.left;
+            helperContainer.style.top = savedPos.top;
+            helperContainer.style.right = 'auto';
+            helperContainer.style.bottom = 'auto';
+        }
+    }
+
+    // 保存当前位置
+    function saveCurrentPosition() {
+        const rect = helperContainer.getBoundingClientRect();
+        const pos = {
+            left: `${rect.left}px`,
+            top: `${rect.top}px`
+        };
+        GM_setValue(HELPER_POSITION_KEY, pos);
+    }
+
     // 主按钮点击事件
     mainBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -504,4 +537,70 @@
 
     // 初始化历史记录
     updateHistoryUI();
+    
+    // 初始化位置
+    loadSavedPosition();
+    
+    // ==============================
+    // 拖拽功能实现
+    // ==============================
+    
+    mainBtn.addEventListener('mousedown', startDrag);
+    
+    function startDrag(e) {
+        if (e.button !== 0) return; // 只处理左键点击
+        
+        // 防止拖拽时触发其他事件
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // 记录初始位置
+        isDragging = true;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        
+        // 获取当前helperContainer的位置
+        const rect = helperContainer.getBoundingClientRect();
+        initialX = rect.left;
+        initialY = rect.top;
+        
+        // 添加拖拽样式
+        helperContainer.classList.add('dragging');
+        
+        // 添加事件监听
+        document.addEventListener('mousemove', doDrag);
+        document.addEventListener('mouseup', stopDrag);
+        
+        // 关闭菜单
+        hideMenu();
+        hideHistoryPanel();
+    }
+    
+    function doDrag(e) {
+        if (!isDragging) return;
+        
+        // 计算偏移量
+        const dx = e.clientX - dragStartX;
+        const dy = e.clientY - dragStartY;
+        
+        // 更新位置
+        helperContainer.style.left = `${initialX + dx}px`;
+        helperContainer.style.top = `${initialY + dy}px`;
+        helperContainer.style.right = 'auto';
+        helperContainer.style.bottom = 'auto';
+    }
+    
+    function stopDrag() {
+        if (!isDragging) return;
+        
+        isDragging = false;
+        helperContainer.classList.remove('dragging');
+        
+        // 保存位置
+        saveCurrentPosition();
+        
+        // 移除事件监听
+        document.removeEventListener('mousemove', doDrag);
+        document.removeEventListener('mouseup', stopDrag);
+    }
 })();
